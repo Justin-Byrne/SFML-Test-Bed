@@ -8,24 +8,93 @@
 
 #include <cmath>
 #include <string>
+#include <stdlib.h>
+#include <random>
 
-struct CONFIG
+#pragma mark - MATH
+
+#define PI 3.141592653589
+#define SIN ( x ) sin ( x * PI / 180 )
+#define COS ( x ) cos ( x * PI / 180 )
+
+#pragma mark - GLOBALS
+
+struct GLOBALS
 {
-    std::string window_title  = "Movement";
-    int         window_width  = 900;
-    int         window_height = 900;
+    struct WINDOW
+    {
+        std::string          title  = "Movement";
+        
+        static constexpr int width  = 900;
+        static constexpr int height = 900;
+        
+        static constexpr int frame_rate = 60;
+        
+    } window;
     
-    int         frame_rate    = 60;
+    struct COLORS
+    {
+        sf::Color white          = { 255, 255, 255 };
+        sf::Color yellow_sun     = { 237, 235,   0 };
+        sf::Color green_apple    = { 146, 195,   0 };
+        sf::Color blue_ice       = {  28,  50, 251 };
+        sf::Color blue_bright    = {   0, 248, 250 };
+        sf::Color blue_baby      = {  84, 212, 255 };
+        sf::Color red            = { 255,   0,  10 };
+        sf::Color gray_brilliant = {  84,  84,  84 };
+        sf::Color gray_faded     = { 100, 100, 100 };
+        sf::Color gray_charcoal  = {  54,  56,  62 };
+        sf::Color black          = {   0,   0,   0 };
+    } colors;
     
-} config;
+} globals;
+
+#pragma mark - FORWARD DECLARATIONS
+struct POINT;
+struct PATH;
+struct ENTITY;
+
+int generate_random ( int upper );
+int generate_random ( int lower, int upper );
+int get_distributed_value ( int mean, int standard_deviation );
+sf::CircleShape create_circle ( POINT point, int radius, sf::Color stroke, int stroke_size, sf::Color fill );
+
+#pragma mark - UTILITIES
+
+int generate_random ( int upper )
+{
+    return ( std::rand ( ) % ( upper + 1 ) );
+}
+
+int generate_random ( int lower, int upper )
+{
+    return ( std::rand ( ) % ( upper - lower + 1 ) ) + lower;
+}
+
+int get_distributed_value ( int mean, int standard_deviation )
+{
+    int result = 0;
+    
+    std::random_device               random_device;
+    std::default_random_engine       random_engine ( random_device ( ) );
+    std::normal_distribution<double> distribution  ( mean, standard_deviation );
+    
+    do
+        result = (int) std::round ( distribution ( random_engine ) );
+    while ( result < 1 );
+    
+    return result;
+}
+
+#pragma mark - STRUCTS
 
 struct POINT
 {
-    float x         = 0;
-    float y         = 0;
-    float z         = 0;
+    float x = 0.0;
+    float y = 0.0;
+    float z = 0.0;
     
-    float magnitude = 0;
+    float magnitude = 0.0;
     
     POINT ( float x, float y )
     {
@@ -48,31 +117,31 @@ struct POINT
     
     // > .. Operations ................................. //
 
-    void add ( POINT velocity )
+    void add ( POINT & velocity )
     {
         this->x += velocity.x;
         this->y += velocity.y;
     }
     
-    void subract ( POINT velocity )
+    void subract ( POINT & velocity )
     {
         this->x -= velocity.x;
         this->y -= velocity.y;
     }
     
-    void multiply ( float value )
+    void multiply ( float & value )
     {
         this->x *= value;
         this->y *= value;
     }
     
-    void divide ( float value )
+    void divide ( float & value )
     {
         this->x /= value;
         this->y /= value;
     }
     
-    void normalize_magnitude ( POINT velocity )
+    void normalize_magnitude ( POINT & velocity )
     {
         float magnitude = this->get_magnitude ( );
         
@@ -93,25 +162,30 @@ struct POINT
         this->magnitude = this->get_magnitude ( );
     }
     
-    void limit ( POINT velocity );
-    void heading ( POINT velocity );
-    void rotate ( POINT velocity );
-    void lerp ( POINT velocity );
-    void distance ( POINT velocity );
-    void angle_between ( POINT velocity );
-    void dot_product ( POINT velocity );
-    void cross_product ( POINT velocity );
+//    void limit ( POINT velocity );
+//    void heading ( POINT velocity );
+//    void rotate ( POINT velocity );
+//    void lerp ( POINT velocity );
+//    void distance ( POINT velocity );
+//    void angle_between ( POINT velocity );
+//    void dot_product ( POINT velocity );
+//    void cross_product ( POINT velocity );
 };
 
+
+/// Vector Pathing
+/// @remarks Coupling: Low
 struct PATH : POINT
 {
-    POINT location, velocity;
+    POINT location, velocity, accleration;
+    
+    sf::RenderWindow * window = nullptr;
     
     PATH ( POINT location )
     {
         this->location = location;
     }
-    
+
     // Constructors (Generic) ... //
     
     PATH  ( ) { }
@@ -120,44 +194,70 @@ struct PATH : POINT
     
     // > .. Operations ................................. //
     
-    void update ( POINT velocity )
+    void update ( )
     {
-        this->location.add ( velocity );
+        this->location.add ( this->velocity );
+        this->location.add ( this->accleration );
+        
+        this->check_boundary ( );
     }
     
-    void check_boundary ( )         // << TODO: FIX THIS GLOBAL COUPLING | MEDIATOR PATTERN !?
+    void check_boundary ( )                     // << TODO: __GLOBAL COUPLING__
     {
-        if ( location.x > config.window_width  ) location.x = 0;
-        if ( location.y > config.window_height ) location.y = 0;
+        if ( location.x > globals.window.width  ) location.x = 0;
+        if ( location.y > globals.window.height ) location.y = 0;
         
-        if ( location.x < 0 ) location.x = config.window_width;
-        if ( location.y < 0 ) location.y = config.window_height;
+        if ( location.x < 0 ) location.x = globals.window.width;
+        if ( location.y < 0 ) location.y = globals.window.height;
     }
     
     void display ( )
     {
         // move object around path
     }
+    
+    // > .. Setters .................................... //
+    
+    void set_velocity ( POINT & velocity )
+    {
+        this->velocity = velocity;
+    }
+    
+    void set_accerlation ( POINT & accerlation )
+    {
+        this->accleration = accerlation;
+    }
 };
 
-sf::CircleShape create_circle ( float x, float y, int radius, sf::Color stroke, int stroke_size, sf::Color fill )
+struct ENTITY : PATH
 {
-    sf::CircleShape result;
+    enum class GENDER
+    {
+        MALE,
+        FEMALE
+    };
     
-    result.setRadius           ( radius );
-    result.setOutlineColor     ( stroke );
-    result.setFillColor        ( fill );
-    result.setOutlineThickness ( stroke_size );
-    result.setPosition         ( x, y );
+    enum class STATE
+    {
+        SILENT,
+        ACTIVE
+    };
     
-    return result;
-}
+    // Constructors (Generic) ... //
+    
+    ENTITY  ( ) { }
+    
+    ~ENTITY ( ) { }
+};
+
+#pragma mark - UTILITIES
 
 sf::CircleShape create_circle ( POINT point, int radius, sf::Color stroke, int stroke_size, sf::Color fill )
 {
     sf::CircleShape result;
     
     result.setRadius           ( radius );
+    result.setOrigin           ( radius / 2, radius / 2 );                      // Set: origin in center of shape
     result.setOutlineColor     ( stroke );
     result.setFillColor        ( fill );
     result.setOutlineThickness ( stroke_size );
@@ -166,27 +266,37 @@ sf::CircleShape create_circle ( POINT point, int radius, sf::Color stroke, int s
     return result;
 }
 
+#pragma mark - MAIN
+
 int main ( int argc, const char * argv[] )
 {
-    sf::RenderWindow window ( sf::VideoMode ( config.window_width, config.window_height ), config.window_title );   // Create the main window
+    sf::RenderWindow window ( sf::VideoMode ( globals.window.width, globals.window.height ), globals.window.title );   // Create the main window
     
-    window.setFramerateLimit ( config.frame_rate );
-    
+    window.setFramerateLimit ( globals.window.frame_rate );
     
     float velocity = 3;
     
-    sf::CircleShape circle = create_circle( POINT { 30, 30 }, 10, sf::Color::Blue, 1, sf::Color::Transparent );
+    POINT postion = { 30, 30 };
+    
+    sf::CircleShape body        = create_circle ( POINT { 30, 30 }, 400, sf::Color::Transparent, 0, globals.colors.blue_bright );      // Body
+    sf::CircleShape eye_left    = create_circle ( POINT { postion.x + 213.3f, postion.y + 53.0f }, 120, sf::Color::Transparent, 0, globals.colors.blue_bright );      // Eye Left
+    sf::CircleShape eye_right   = create_circle ( POINT { postion.x + 213.3f, postion.y + 213.0f }, 120, sf::Color::Transparent, 0, globals.colors.blue_bright );      // Eye Right
+    sf::CircleShape pupil_left  = create_circle ( POINT { postion.x + 286.0f, postion.y + 92.3f },  54, sf::Color::Transparent, 0, globals.colors.blue_bright );      // Pupil Left
+    sf::CircleShape pupil_right = create_circle ( POINT { postion.x + 286.0f, postion.y + 252.0f },  54, sf::Color::Transparent, 0, globals.colors.blue_bright );      // Pupel Right
     
     while ( window.isOpen ( ) )                                                 // Simulation Loop
     {
-        window.clear ( sf::Color::Black );                                      // Clear screen
+        window.clear ( globals.colors.gray_charcoal );                          // Clear screen
         
-        // location = location + velocity
-        circle.setPosition ( circle.getPosition().x + velocity, circle.getPosition().y + velocity );
+//        body.setPosition ( body.getPosition().x + velocity, body.getPosition().y + velocity );
         
         // ... DRAW ......................................................... //
         
-        window.draw ( circle );                                                 // Draw
+        window.draw ( body );                                                   // Draw
+        window.draw ( eye_left );                                               // Draw
+        window.draw ( eye_right );                                              // Draw
+        window.draw ( pupil_left );                                             // Draw
+        window.draw ( pupil_right );                                            // Draw
         
         window.display ( );                                                     // Update the window
         
