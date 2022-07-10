@@ -57,7 +57,7 @@ struct ENTITY;
 int generate_random ( int upper );
 int generate_random ( int lower, int upper );
 int get_distributed_value ( int mean, int standard_deviation );
-sf::CircleShape create_circle ( POINT point, float radius, sf::Color stroke, int stroke_size, sf::Color fill );
+sf::CircleShape create_circle ( POINT position, float radius, sf::Color stroke_color, int stroke_size, sf::Color fill_color );
 
 #pragma mark - UTILITIES
 
@@ -228,75 +228,42 @@ struct PATH : POINT
     }
 };
 
-struct SCENE_NODE
-{
-    void draw ( sf::RenderTarget & target, const sf::Transform & parent_transform ) const
-    {
-        sf::Transform combined_transform = parent_transform * this->transform;  // combine the parent transform with the node's transform
-
-        onDraw ( target, combined_transform );                                  // let the node draw itself
-
-        for ( std::size_t i = 0; i < this->children.size ( ); i++ )             // draw its children
-            this->children[i]->draw(target, combined_transform);
-    }
-
-private:
-
-    virtual void onDraw ( sf::RenderTarget & target, const sf::Transform & transform ) const = 0;
-
-    sf::Transform transform;
-    std::vector<SCENE_NODE *> children;
-};
+//struct SCENE_NODE
+//{
+//    void draw ( sf::RenderTarget & target, const sf::Transform & parent_transform ) const
+//    {
+//        sf::Transform combined_transform = parent_transform * this->transform;  // combine the parent transform with the node's transform
+//
+//        onDraw ( target, combined_transform );                                  // let the node draw itself
+//
+//        for ( std::size_t i = 0; i < this->children.size ( ); i++ )             // draw its children
+//            this->children[i]->draw(target, combined_transform);
+//    }
+//
+//private:
+//
+//    virtual void onDraw ( sf::RenderTarget & target, const sf::Transform & transform ) const = 0;
+//
+//    sf::Transform transform;
+//    std::vector<SCENE_NODE *> children;
+//};
 
 #pragma mark - UTILITIES
 
-sf::CircleShape create_circle ( POINT position, float radius, sf::Color stroke, int stroke_size, sf::Color fill )
+sf::CircleShape create_circle ( POINT position, float radius, sf::Color stroke_color, int stroke_size, sf::Color fill_color )
 {
     sf::CircleShape result;
-
-    float x_origin = radius;
-    float y_origin = radius;
     
     result.setRadius           ( radius );
-    result.setOrigin           ( x_origin, y_origin );
-    result.setOutlineColor     ( stroke );
-    result.setFillColor        ( fill );
+    result.setOutlineColor     ( stroke_color );
     result.setOutlineThickness ( stroke_size );
+    result.setFillColor        ( fill_color );
     result.setPosition         ( position.x, position.y );
     
     return result;
 }
 
-struct LIMB
-{
-    sf::CircleShape circle;
-    sf::Color       color;
-    
-    int        id;
-    static int ID;
-    
-    POINT position;
-    float size;
-    
-    LIMB ( POINT position, float size, sf::Color color )
-    {
-        this->position = position;
-        this->size     = size;
-        this->color    = color;
-        
-        this->circle = create_circle ( position, size, sf::Color::Transparent, 0, this->color );
-    }
-    
-    // > .. Operations ................................. //
-    
-    LIMB  ( ) { }
-    
-    ~LIMB ( ) { }
-};
-
-int LIMB::ID;
-
-struct BODY
+struct ENTITY
 {
     int        id;
     static int ID;
@@ -304,7 +271,7 @@ struct BODY
     POINT position;
     float size;
     
-    BODY ( POINT position, float size )
+    ENTITY ( POINT position, float size )
     {
         this->position = position;
         this->size     = size;
@@ -314,37 +281,40 @@ struct BODY
     
     // Constructors (Generic) ... //
     
-    BODY  ( ) { }
+    ENTITY  ( ) { }
     
-    ~BODY ( ) { }
+    ~ENTITY ( ) { }
     
     // > .. Operations ................................. //
     
     void create_body ( )
     {
-        this->children.push_back ( LIMB ( POINT { this->position.x,           this->position.y           }, this->size,        globals.colors.blue_bright ) );  // Body
-//        this->children.push_back ( LIMB ( POINT { this->position.x * 0.5333f, this->position.y * 0.1333f }, this->size * 0.30, sf::Color::White ) );            // Eye (Left)
-//        this->children.push_back ( LIMB ( POINT { this->position.x * 0.5333f, this->position.y * 0.5333f }, this->size * 0.30, sf::Color::White ) );            // Eye (Right)
-//        this->children.push_back ( LIMB ( POINT { this->position.x * 0.7125f, this->position.y * 0.5333f }, this->size * 0.30, sf::Color::Black ) );            // Pupil (Left)
-//        this->children.push_back ( LIMB ( POINT { this->position.x * 0.7125f, this->position.y * 0.6310f }, this->size * 0.30, sf::Color::Black ) );            // Pupil (Right)
+        this->children.push_back ( create_circle ( POINT { this->position.x,       this->position.y },       this->size,         sf::Color::Black, 0, globals.colors.blue_bright ) );  // Body
+        this->children.push_back ( create_circle ( POINT { this->position.x + 120, this->position.y + 33  }, this->size * 0.30,  sf::Color::Black, 0, sf::Color::White ) );            // Eye (Left)
+        this->children.push_back ( create_circle ( POINT { this->position.x + 120, this->position.y + 100 }, this->size * 0.30,  sf::Color::Black, 0, sf::Color::White ) );            // Eye (Right)
+        this->children.push_back ( create_circle ( POINT { this->position.x + 150, this->position.y + 48  }, this->size * 0.135, sf::Color::Black, 0, sf::Color::Black ) );            // Pupil (Left)
+        this->children.push_back ( create_circle ( POINT { this->position.x + 150, this->position.y + 116 }, this->size * 0.135, sf::Color::Black, 0, sf::Color::Black ) );            // Pupil (Right)
+    
+        this->children[0].setOrigin ( this->children[0].getRadius ( ), this->children[0].getRadius ( ) );
+//        this->children[1].setOrigin ( this->size * 0.30, this->size * 0.30 );
     }
     
     void draw ( sf::RenderTarget & target, const sf::Transform & transform ) const
     {
         for ( std::size_t i = 0; i < this->children.size ( ); i++ )             // draw its children
-            target.draw ( this->children[i].circle, transform );
+            target.draw ( this->children[i], transform );
     }
     
     void draw ( sf::RenderTarget & target ) const
     {
         for ( std::size_t i = 0; i < this->children.size ( ); i++ )             // draw its children
-            target.draw ( this->children[i].circle );
+            target.draw ( this->children[i] );
     }
     
-    std::vector<LIMB> children;
+    std::vector<sf::CircleShape> children;
 };
 
-int BODY::ID;
+int ENTITY::ID;
 
 #pragma mark - MAIN
 
@@ -354,10 +324,10 @@ int main ( int argc, const char * argv[] )
     
     window.setFramerateLimit ( globals.window.frame_rate );
     
-    POINT position = { 1.0, 1.0 };
-    float radius   = 200.0;
+    POINT position = { 0.0, 0.0 };
+    float radius   = 100.0;
     
-    BODY entity = { position, radius };
+    ENTITY entity = { position, radius };
     
     int k = 0;
     
@@ -371,22 +341,27 @@ int main ( int argc, const char * argv[] )
         
         // ... TEST ......................................................... //
         
-        POINT rendered_position = { entity.children[0].circle.getPosition().x, entity.children[0].circle.getPosition().x };
-        POINT rendered_origin   = { entity.children[0].circle.getOrigin().x,   entity.children[0].circle.getOrigin().x };
+        POINT rendered_position = { entity.children[0].getPosition().x, entity.children[0].getPosition().y };
+        POINT rendered_origin   = { entity.children[0].getOrigin().x,   entity.children[0].getOrigin().y   };
         
-        entity.children[0].circle.setPosition ( rendered_position.x + 1, rendered_position.y + 1 );
+//        entity.children[0].circle.setPosition ( rendered_position.x + 1, rendered_position.y + 1 );
+//        entity.position.x = rendered_position.x + 1;
+//        entity.position.y = rendered_position.y + 1;
         
-        printf ( "\nPosition:\tx: %f, y: %f",   rendered_position.x, rendered_position.y );
-        printf ( "\nOrigin:\t\tx: %f, y: %f\n", rendered_origin.x, rendered_origin.y );
-        printf ( "\nRadius:\t\t%f\n",           radius );
+        printf ( "\nPosition:\tx: %f, y: %f", rendered_position.x, rendered_position.y );
+        printf ( "\nOrigin:\t\tx: %f, y: %f", rendered_origin.x,   rendered_origin.y );
+        printf ( "\nRadius:\t\t%f\n",         radius );
         
         sf::CircleShape circle_position = create_circle ( rendered_position, 5.0, sf::Color::Red,  1, sf::Color::White );
         sf::CircleShape circle_origin   = create_circle ( rendered_origin,   5.0, sf::Color::Blue, 1, sf::Color::Green );
         
         // ... TEST ......................................................... //
         
-//        entity.draw ( window, transform.rotate ( k ) );                         // Draw
-        entity.draw ( window );                                                 // Draw
+        entity.draw ( window, transform.rotate ( k ) );                         // Draw
+//        entity.draw( window, transform.scale ( 0.75f, 0.75f ) );                // Draw
+//        entity.draw ( window, transform.translate ( k, k ) );                   // Draw
+        
+//        entity.draw ( window );                                                 // Draw
         
         window.draw ( circle_position );
         
@@ -396,7 +371,7 @@ int main ( int argc, const char * argv[] )
         
         k++;
         
-//        printf ( "k: %d\n", k );
+        // ... EVENT ........................................................ //
         
         sf::Event event;                                                        // Process events
         
