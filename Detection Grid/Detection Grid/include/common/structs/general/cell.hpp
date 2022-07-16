@@ -64,7 +64,7 @@ struct CELL
         return this->matrix.column;
     }
     
-    void activate ( sf::Color color = colors::blue_bright )
+    void activate ( sf::Color color = colors::blue_dream )
     {
         this->shape.setFillColor ( color );
     }

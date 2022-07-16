@@ -9,8 +9,7 @@
 
 extern sf::RenderWindow window;
 
-extern std::vector<CELL> grid;
-extern std::unordered_map<std::string, CELL> grid_map;
+extern std::unordered_map<std::string, CELL> grid;
 
 namespace UNIFORM_GRID
 {
@@ -18,7 +17,18 @@ namespace UNIFORM_GRID
     {
         for ( int i = 0; ( i * CELL_SIZE ) < WINDOW_HEIGHT; i++ )
             for ( int j = 0; ( j * CELL_SIZE ) < WINDOW_WIDTH; j++ )
-                grid.push_back ( CELL ( i, j, CELL_SIZE ) );
+                grid.insert (
+                    std::pair<std::string, CELL> (
+                        std::string ( ) + std::to_string ( i ) + ", " + std::to_string ( j ),
+                        CELL ( i, j, CELL_SIZE ) ) );
+        
+        return EXIT_SUCCESS;
+    }
+
+    int reset ( )
+    {
+        for ( auto & cell : grid )
+            cell.second.shape.setFillColor ( colors::transparent );
         
         return EXIT_SUCCESS;
     }
@@ -26,7 +36,9 @@ namespace UNIFORM_GRID
     int display ( )
     {
         for ( auto & cell : grid )
-            window.draw ( cell.shape );
+            window.draw ( cell.second.shape );
+        
+        reset ( );
         
         return EXIT_SUCCESS;
     }
@@ -37,40 +49,10 @@ namespace UNIFORM_GRID
         
         for ( auto & cell : grid )
         {
-            printf ( "id:\t( %d, %d )\n", cell.get_row ( ), cell.get_column ( ) );
-            printf ( "x:\t%f, %f\n",      cell.start.x,     cell.end.x          );
-            printf ( "y:\t%f, %f\n\n",    cell.start.y,     cell.end.y          );
+            printf ( "id:\t( %d, %d )\n", cell.second.get_row ( ), cell.second.get_column ( ) );
+            printf ( "x:\t%f, %f\n",      cell.second.start.x,     cell.second.end.x          );
+            printf ( "y:\t%f, %f\n\n",    cell.second.start.y,     cell.second.end.y          );
         }
-        
-        return EXIT_SUCCESS;
-    }
-
-    // HASHMAP .............................................................. //
-
-    int generate_map ( )
-    {
-        for ( int i = 0; ( i * CELL_SIZE ) < WINDOW_HEIGHT; i++ )
-            for ( int j = 0; ( j * CELL_SIZE ) < WINDOW_WIDTH; j++ )
-                grid_map.insert (
-                    std::pair<std::string, CELL> (
-                        std::string ( ) + std::to_string ( i ) + ", " + std::to_string ( j ),
-                        CELL ( i, j, CELL_SIZE ) ) );
-        
-        return EXIT_SUCCESS;
-    }
-
-    int reset_map ( )
-    {
-        for ( auto & cell : grid_map )
-            cell.second.shape.setFillColor ( colors::transparent );
-        
-        return EXIT_SUCCESS;
-    }
-
-    int display_map ( )
-    {
-        for ( auto & cell : grid_map )
-            window.draw ( cell.second.shape );
         
         return EXIT_SUCCESS;
     }

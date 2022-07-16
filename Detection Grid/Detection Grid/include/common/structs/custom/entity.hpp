@@ -153,7 +153,7 @@ private:
         int column = std::floor ( this->origin.x / CELL_SIZE );
         int row    = std::floor ( this->origin.y / CELL_SIZE );
         
-        this->grid_location = std::string ( ) + std::to_string ( column ) + ", " + std::to_string ( row );
+        this->grid_location = std::string ( ) + std::to_string ( row ) + ", " + std::to_string ( column );
     }
 };
 

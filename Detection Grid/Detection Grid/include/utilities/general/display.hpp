@@ -16,8 +16,7 @@ extern POINT rotate_destination;
 extern sf::RenderWindow window;
 extern sf::Color * step_colors;
 
-extern std::vector<CELL> grid;
-extern std::unordered_map<std::string, CELL> grid_map;
+extern std::unordered_map<std::string, CELL> grid;
 
 namespace DISPLAY
 {
@@ -74,21 +73,7 @@ namespace DISPLAY
 
     int grid_location ( ENTITY & entity )
     {
-        for ( auto & cell : grid )
-            if (
-                     ( entity.origin.x > cell.start.x && entity.origin.x < cell.end.x )
-                  && ( entity.origin.y > cell.start.y && entity.origin.y < cell.end.y )
-                )
-                cell.activate   ( );
-            else
-                cell.deactivate ( );
-        
-        return EXIT_SUCCESS;
-    }
-
-    int grid_location_map ( ENTITY & entity )
-    {
-        grid_map [ entity.grid_location ].activate ( );
+        grid [ entity.grid_location ].activate ( );
         
         return EXIT_SUCCESS;
     }

@@ -18,8 +18,7 @@ POINT rotate_origin, rotate_destination;
 
 sf::Color * step_colors = generate_step_colors ( 255, true );
 
-std::vector<CELL> grid;
-std::unordered_map<std::string, CELL> grid_map;
+std::unordered_map<std::string, CELL> grid;
 
 #pragma mark - GLOBAL FUNCTION DECLARATIONS
 
@@ -40,16 +39,12 @@ int main ( int argc, const char * argv[] )
     UNIFORM_GRID::generate ( );
     #endif
     
-    #if DEBUG_UNIFORM_GRID_2
-    UNIFORM_GRID::generate_map ( );
-    #endif
-    
     while ( window.isOpen ( ) )                                                 // Simulation Loop
     {
-        window.clear ( colors::gray_charcoal );                                 // Clear screen
+        window.clear ( colors::gray_dark );                                     // Clear screen
         
-        #if DEBUG_UNIFORM_GRID_2
-        UNIFORM_GRID::reset_map ( );
+        #if DEBUG_UNIFORM_GRID
+        UNIFORM_GRID::display ( );
         #endif
         
         for ( int i = 0; i < ENTITY_MAX; i++ )
@@ -97,19 +92,10 @@ int main ( int argc, const char * argv[] )
             DISPLAY::steps ( entity[i] );
             #endif
             
-            #if DEBUG_UNIFORM_GRID_2
-            DISPLAY::grid_location_map ( entity[i] );
-            #endif
-            
             #if DEBUG_UNIFORM_GRID
             DISPLAY::grid_location ( entity[i] );
-            UNIFORM_GRID::display  ( );
             #endif
         }
-        
-        #if DEBUG_UNIFORM_GRID_2
-        UNIFORM_GRID::display_map ( );
-        #endif
         
         window.display ( );                                                     // Update the window
         

@@ -16,6 +16,7 @@ namespace colors
     sf::Color green_apple    = { 146, 195,   0 };
     sf::Color blue_ice       = {  28,  50, 251 };
     sf::Color blue_bright    = {   0, 248, 250 };
+    sf::Color blue_dream     = {  40,  89, 130 };
     sf::Color blue_baby      = {  84, 212, 255 };
     sf::Color red            = { 255,   0,  10 };
     sf::Color red_apple      = { 153,  55,  55 };
